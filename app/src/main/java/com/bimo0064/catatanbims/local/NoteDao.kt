@@ -5,14 +5,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
-
-    @Query("SELECT * FROM notes WHERE isTrashed = 0 AND isArchived = 0")
+    @Query("SELECT * FROM Note WHERE isArchived = 0 AND isTrashed = 0")
     fun getAllNotes(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE isArchived = 1 AND isTrashed = 0")
+    @Query("SELECT * FROM Note WHERE isArchived = 1 AND isTrashed = 0")
     fun getArchivedNotes(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE isTrashed = 1")
+    @Query("SELECT * FROM Note WHERE isTrashed = 1")
     fun getTrashedNotes(): Flow<List<Note>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

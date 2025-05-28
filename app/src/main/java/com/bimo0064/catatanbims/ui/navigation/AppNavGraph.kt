@@ -1,8 +1,6 @@
 package com.bimo0064.catatanbims.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,55 +14,32 @@ sealed class Screen(val route: String) {
     object AddEditWithArgs : Screen("add_edit/{noteId}") {
         fun createRoute(noteId: Int) = "add_edit/$noteId"
     }
-
 }
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
-    viewModel: NoteViewModel,
-    modifier: Modifier = Modifier
+    viewModel: NoteViewModel
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Notes.route,
-        modifier = modifier
-    ) {
+    NavHost(navController, startDestination = Screen.Notes.route) {
         composable(Screen.Notes.route) {
             NoteListScreen(
                 viewModel = viewModel,
-                onNoteClick = { note ->
-                    navController.navigate(Screen.AddEditWithArgs.createRoute(note.id))
-                },
-                onAddNoteClick = {
-                    navController.navigate(Screen.AddEdit.route)
-                },
-                onDelete = { note ->
-                    viewModel.updateNote(note.copy(isTrashed = true))
-                },
-                onArchive = { note ->
-                    viewModel.updateNote(note.copy(isArchived = true))
-                }
+                onNoteClick = { note -> navController.navigate(Screen.AddEditWithArgs.createRoute(note.id)) },
+                onAddNoteClick = { navController.navigate(Screen.AddEdit.route) },
+                onDelete = { note -> viewModel.updateNote(note.copy(isTrashed = true)) },
+                onArchive = { note -> viewModel.updateNote(note.copy(isArchived = true)) }
             )
+        }
+        composable(Screen.AddEdit.route) {
+            AddEditNoteScreen(viewModel = viewModel) { navController.popBackStack() }
         }
         composable(Screen.AddEditWithArgs.route) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
-            val note = viewModel.notes.collectAsState().value.find { it.id == noteId }
-
-            if (note != null) {
-                AddEditNoteScreen(
-                    viewModel = viewModel,
-                    noteToEdit = note,
-                    onSave = { navController.popBackStack() }
-                )
+            val note = viewModel.notes.value.find { it.id == noteId }
+            note?.let {
+                AddEditNoteScreen(viewModel, it) { navController.popBackStack() }
             }
-        }
-
-        composable(Screen.AddEdit.route) {
-            AddEditNoteScreen(
-                viewModel = viewModel,
-                onSave = { navController.popBackStack() }
-            )
         }
     }
 }
