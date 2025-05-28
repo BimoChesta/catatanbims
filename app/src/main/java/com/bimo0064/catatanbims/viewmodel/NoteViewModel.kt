@@ -1,24 +1,26 @@
 package com.bimo0064.catatanbims.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.bimo0064.catatanbims.local.Note
 import com.bimo0064.catatanbims.repository.NoteRepository
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
-    val notes: StateFlow<List<Note>> = repository.allNotes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
-    val archived: StateFlow<List<Note>> = repository.archivedNotes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val trashed: StateFlow<List<Note>> = repository.trashedNotes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    init {
+        viewModelScope.launch {
+            repository.allNotes.collect {
+                _notes.value = it
+            }
+        }
+    }
 
     fun addNote(note: Note) {
         viewModelScope.launch {
