@@ -11,11 +11,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,6 +38,8 @@ fun NoteListScreen(
 ) {
     var isGridView by remember { mutableStateOf(false) }
     var selectedScreen by remember { mutableStateOf("trashed") }
+    var searchQuery by remember { mutableStateOf("") }
+    var isDarkMode by remember { mutableStateOf(false) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -48,117 +50,148 @@ fun NoteListScreen(
         else -> viewModel.notes.collectAsState(initial = emptyList())
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text("Menu", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
-                NavigationDrawerItem(
-                    label = { Text("Catatan") },
-                    selected = selectedScreen == "notes",
-                    onClick = {
-                        selectedScreen = "notes"
-                        scope.launch { drawerState.close() }
-                    }
-                )
-                NavigationDrawerItem(
-                    label = { Text("Arsip") },
-                    selected = selectedScreen == "archived",
-                    onClick = {
-                        selectedScreen = "archived"
-                        scope.launch { drawerState.close() }
-                    }
-                )
-                NavigationDrawerItem(
-                    label = { Text("Sampah") },
-                    selected = selectedScreen == "trashed",
-                    onClick = {
-                        selectedScreen = "trashed"
-                        scope.launch { drawerState.close() }
-                    }
-                )
-            }
-        }
+    val filteredNotes = notes.value.filter {
+        it.title.contains(searchQuery, ignoreCase = true) ||
+                it.content.contains(searchQuery, ignoreCase = true)
+    }
+
+    MaterialTheme(
+        colorScheme = if (isDarkMode) darkColorScheme() else lightColorScheme()
     ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Catatan") },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet {
+                    Text(
+                        "Menu",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Catatan") },
+                        selected = selectedScreen == "notes",
+                        onClick = {
+                            selectedScreen = "notes"
+                            scope.launch { drawerState.close() }
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = { isGridView = !isGridView }) {
-                            Icon(
-                                painter = painterResource(
-                                    if (isGridView) R.drawable.baseline_view_list_24
-                                    else R.drawable.baseline_grid_view_24
-                                ),
-                                contentDescription = stringResource(
-                                    if (isGridView) R.string.list
-                                    else R.string.grid
-                                ),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Arsip") },
+                        selected = selectedScreen == "archived",
+                        onClick = {
+                            selectedScreen = "archived"
+                            scope.launch { drawerState.close() }
                         }
-                    }
-                )
-            },
-            floatingActionButton = {
-                if (selectedScreen == "notes") {
-                    FloatingActionButton(onClick = onAddNoteClick) {
-                        Text("+")
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Sampah") },
+                        selected = selectedScreen == "trashed",
+                        onClick = {
+                            selectedScreen = "trashed"
+                            scope.launch { drawerState.close() }
+                        }
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Dark Mode")
+                        Spacer(Modifier.weight(1f))
+                        Switch(checked = isDarkMode, onCheckedChange = { isDarkMode = it })
                     }
                 }
             }
-        ) { padding ->
-            if (notes.value.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize(),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    Text("Tidak ada catatan")
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Cari catatan...") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { isGridView = !isGridView }) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (isGridView) R.drawable.baseline_view_list_24
+                                        else R.drawable.baseline_grid_view_24
+                                    ),
+                                    contentDescription = stringResource(
+                                        if (isGridView) R.string.list
+                                        else R.string.grid
+                                    ),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    )
+                },
+                floatingActionButton = {
+                    if (selectedScreen == "notes") {
+                        FloatingActionButton(onClick = onAddNoteClick) {
+                            Text("+")
+                        }
+                    }
                 }
-            } else {
-                if (isGridView) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+            ) { padding ->
+                if (filteredNotes.isEmpty()) {
+                    Box(
                         modifier = Modifier
                             .padding(padding)
-                            .fillMaxSize()
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        items(notes.value) { note ->
-                            NoteItem(
-                                note = note,
-                                onClick = { onNoteClick(note) },
-                                onDelete = { onDelete(note) },
-                                onArchive = { onArchive(note) },
-                                onRestore = { onRestore(note) },
-                                onPermanentDelete = { onPermanentDelete(note) },
-                                isTrashScreen = selectedScreen == "trashed"
-                            )
-                        }
+                        Text("Tidak ada catatan")
                     }
                 } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize()
-                    ) {
-                        items(notes.value) { note ->
-                            NoteItem(
-                                note = note,
-                                onClick = { onNoteClick(note) },
-                                onDelete = { onDelete(note) },
-                                onArchive = { onArchive(note) },
-                                onRestore = { onRestore(note) },
-                                onPermanentDelete = { onPermanentDelete(note) },
-                                isTrashScreen = selectedScreen == "trashed"
-                            )
+                    if (isGridView) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier
+                                .padding(padding)
+                                .fillMaxSize()
+                        ) {
+                            items(filteredNotes) { note ->
+                                NoteItem(
+                                    note = note,
+                                    onClick = { onNoteClick(note) },
+                                    onDelete = { onDelete(note) },
+                                    onArchive = { onArchive(note) },
+                                    onRestore = { onRestore(note) },
+                                    onPermanentDelete = { onPermanentDelete(note) },
+                                    isTrashScreen = selectedScreen == "trashed"
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(padding)
+                                .fillMaxSize()
+                        ) {
+                            items(filteredNotes) { note ->
+                                NoteItem(
+                                    note = note,
+                                    onClick = { onNoteClick(note) },
+                                    onDelete = { onDelete(note) },
+                                    onArchive = { onArchive(note) },
+                                    onRestore = { onRestore(note) },
+                                    onPermanentDelete = { onPermanentDelete(note) },
+                                    isTrashScreen = selectedScreen == "trashed"
+                                )
+                            }
                         }
                     }
                 }
@@ -176,7 +209,6 @@ fun NoteItem(
     onRestore: () -> Unit,
     onPermanentDelete: () -> Unit,
     isTrashScreen: Boolean = false,
-    isArchivedScreen: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -195,13 +227,6 @@ fun NoteItem(
                     IconButton(onClick = onPermanentDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Hapus Permanen")
                     }
-                } else if (isArchivedScreen) {
-                    IconButton(onClick = onRestore) {
-                        Icon(Icons.Default.Build, contentDescription = "Kembalikan")
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Buang ke Sampah")
-                    }
                 } else {
                     IconButton(onClick = onArchive) {
                         Icon(Icons.Default.Star, contentDescription = "Arsipkan")
@@ -214,4 +239,3 @@ fun NoteItem(
         }
     }
 }
-
