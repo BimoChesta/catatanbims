@@ -20,7 +20,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     val trashedNotes = repository.trashedNotes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-
     fun addNote(note: Note) = viewModelScope.launch {
         repository.insertNote(note)
     }
@@ -29,8 +28,28 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         repository.updateNote(note)
     }
 
-    fun deleteNote(note: Note) = viewModelScope.launch {
-        repository.deleteNote(note)
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.updateNote(note.copy(isTrashed = true))
+        }
+    }
+
+    fun archiveNote(note: Note) {
+        viewModelScope.launch {
+            repository.updateNote(note.copy(isArchived = true))
+        }
+    }
+
+    fun restoreNote(note: Note) {
+        viewModelScope.launch {
+            repository.updateNote(note.copy(isArchived = false, isTrashed = false))
+        }
+    }
+
+    fun permanentlyDeleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.deleteNote(note)
+        }
     }
 }
 

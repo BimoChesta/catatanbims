@@ -29,10 +29,10 @@ fun AppNavGraph(
                 viewModel = viewModel,
                 onNoteClick = { note -> navController.navigate(Screen.AddEditWithArgs.createRoute(note.id)) },
                 onAddNoteClick = { navController.navigate(Screen.AddEdit.route) },
-                onDelete = { note -> viewModel.updateNote(note.copy(isTrashed = true)) },
-                onArchive = { note -> viewModel.updateNote(note.copy(isArchived = true)) },
-                onRestore = { /* Aksi pulihkan catatan */ },
-                onPermanentDelete = { /* Aksi hapus permanen catatan */ }
+                onDelete = { note -> viewModel.deleteNote(note) },
+                onArchive = { note -> viewModel.archiveNote(note) },
+                onRestore = { note -> viewModel.restoreNote(note) },
+                onPermanentDelete = { note -> viewModel.permanentlyDeleteNote(note) }
             )
         }
         composable(Screen.AddEdit.route) {
