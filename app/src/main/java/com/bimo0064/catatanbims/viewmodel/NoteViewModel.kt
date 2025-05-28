@@ -7,10 +7,13 @@ import com.bimo0064.catatanbims.local.Note
 import com.bimo0064.catatanbims.repository.NoteRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
-    val notes = repository.notes.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val notes = repository.allNotes
+        .map { it.sortedByDescending { note -> note.id } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addNote(note: Note) = viewModelScope.launch {
         repository.insertNote(note)
@@ -25,11 +28,3 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     }
 }
 
-class NoteViewModelFactory(private val repository: NoteRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(NoteViewModel::class.java)) {
-            return NoteViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
