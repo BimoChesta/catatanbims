@@ -3,45 +3,28 @@ package com.bimo0064.catatanbims
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.bimo0064.catatanbims.repository.NoteRepository
+import com.bimo0064.catatanbims.ui.navigation.AppNavGraph
 import com.bimo0064.catatanbims.ui.theme.CatatanBimsTheme
+import com.bimo0064.catatanbims.viewmodel.NoteViewModel
+import com.bimo0064.catatanbims.viewmodel.NoteViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        val dao = NoteDatabase.getDatabase(this).noteDao()
+        val repository = NoteRepository(dao)
+        val factory = NoteViewModelFactory(repository)
+
         setContent {
             CatatanBimsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val viewModel: NoteViewModel = viewModel(factory = factory)
+                val navController = rememberNavController()
+                AppNavGraph(navController = navController, viewModel = viewModel)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CatatanBimsTheme {
-        Greeting("Android")
     }
 }
