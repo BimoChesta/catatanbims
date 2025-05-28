@@ -1,5 +1,7 @@
 package com.bimo0064.catatanbims.repository
 
+import com.bimo0064.catatanbims.local.Note
+import com.bimo0064.catatanbims.local.NoteDao
 import kotlinx.coroutines.flow.Flow
 
 class NoteRepository(private val noteDao: NoteDao) {
