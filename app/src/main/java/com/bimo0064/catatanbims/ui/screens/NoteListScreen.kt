@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -209,6 +210,7 @@ fun NoteItem(
     onRestore: () -> Unit,
     onPermanentDelete: () -> Unit,
     isTrashScreen: Boolean = false,
+    isArchivedScreen: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -221,18 +223,25 @@ fun NoteItem(
 
             Row {
                 if (isTrashScreen) {
-                    IconButton(onClick = onRestore) {
-                        Icon(Icons.Default.Check, contentDescription = "Pulihkan")
+                    TextButton(onClick = onRestore) {
+                        Text("Pulihkan")
                     }
-                    IconButton(onClick = onPermanentDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Hapus Permanen")
+                    TextButton(onClick = onPermanentDelete) {
+                        Text("Hapus Permanen")
+                    }
+                } else if (isArchivedScreen) {
+                    TextButton(onClick = onRestore) {
+                        Text("Kembalikan")
+                    }
+                    TextButton(onClick = onDelete) {
+                        Text("Buang")
                     }
                 } else {
-                    IconButton(onClick = onArchive) {
-                        Icon(Icons.Default.Star, contentDescription = "Arsipkan")
+                    TextButton(onClick = onArchive) {
+                        Text("Arsipkan")
                     }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Buang ke Sampah")
+                    TextButton(onClick = onDelete) {
+                        Text("Buang kesampah")
                     }
                 }
             }
