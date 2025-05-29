@@ -9,5 +9,6 @@ data class Note(
     val title: String,
     val content: String,
     val isArchived: Boolean = false,
-    val isTrashed: Boolean = false
+    val isTrashed: Boolean = false,
+    val priority: String = "Tidak Terlalu Penting"
 )

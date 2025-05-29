@@ -1,21 +1,46 @@
 package com.bimo0064.catatanbims.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -36,9 +61,10 @@ fun NoteListScreen(
     onArchive: (Note) -> Unit,
     onRestore: (Note) -> Unit,
     onPermanentDelete: (Note) -> Unit,
+    onAboutClick: () -> Unit // Tambahkan ini
 ) {
     var isGridView by remember { mutableStateOf(false) }
-    var selectedScreen by remember { mutableStateOf("trashed") }
+    var selectedScreen by remember { mutableStateOf("notes") } // default harusnya notes
     var searchQuery by remember { mutableStateOf("") }
     var isDarkMode by remember { mutableStateOf(false) }
 
@@ -130,10 +156,15 @@ fun NoteListScreen(
                                         else R.drawable.baseline_grid_view_24
                                     ),
                                     contentDescription = stringResource(
-                                        if (isGridView) R.string.list
-                                        else R.string.grid
+                                        if (isGridView) R.string.list else R.string.grid
                                     ),
                                     tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            IconButton(onClick = onAboutClick) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_info_outline_24),
+                                    contentDescription = "Tentang"
                                 )
                             }
                         }
@@ -172,7 +203,8 @@ fun NoteListScreen(
                                     onArchive = { onArchive(note) },
                                     onRestore = { onRestore(note) },
                                     onPermanentDelete = { onPermanentDelete(note) },
-                                    isTrashScreen = selectedScreen == "trashed"
+                                    isTrashScreen = selectedScreen == "trashed",
+                                    isArchivedScreen = selectedScreen == "archived"
                                 )
                             }
                         }
@@ -190,7 +222,8 @@ fun NoteListScreen(
                                     onArchive = { onArchive(note) },
                                     onRestore = { onRestore(note) },
                                     onPermanentDelete = { onPermanentDelete(note) },
-                                    isTrashScreen = selectedScreen == "trashed"
+                                    isTrashScreen = selectedScreen == "trashed",
+                                    isArchivedScreen = selectedScreen == "archived"
                                 )
                             }
                         }
@@ -200,6 +233,7 @@ fun NoteListScreen(
         }
     }
 }
+
 
 @Composable
 fun NoteItem(
@@ -220,6 +254,7 @@ fun NoteItem(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = note.title)
             Text(text = note.content)
+            Text("Prioritas: ${note.priority}", style = MaterialTheme.typography.labelSmall)
 
             Row {
                 if (isTrashScreen) {
